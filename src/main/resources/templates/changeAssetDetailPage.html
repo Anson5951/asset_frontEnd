@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF8">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<title>ChangeDetailPage</title>
+</head>
+
+<body>
+	<script>
+		console.log("referrer : " + document.referrer);
+		var referrer = document.referrer;
+		$(document).ready(function () {
+			var params = new URLSearchParams(window.location.search);
+			$("#assetNo").text(params.get("assetNo"));
+			$("#assetNoParent").text(params.get("assetNoParent"));
+			$("#status").text(params.get("status"));
+			$("#type").text(params.get("type"));
+			$("#location").text(params.get("location"));
+			$("#assignee").text(params.get("assignee"));
+			$("#amount").text(params.get("amount"));
+			$("#crateTime").text(params.get("crateTime"));
+			$("#desc").text(params.get("desc"));
+		})
+
+		function getAssetDetail(assetNo) {
+			$.ajax({
+				url: "http://localhost:8086/asset/getAssetByConditions",
+				data: {
+					assetNo: assetNo,
+				},
+				success: function (data, status, xhr) {
+					console.log(xhr);
+					var asset = data.result[0];
+					$("#assetNo").text(asset.assetNo);
+					$("#assetNoParent").text(asset.getassetNoParent);
+					$("#status").text(asset.status);
+					$("#type").text(asset.type);
+					$("#location").text(asset.location);
+					$("#assignee").text(asset.assignee);
+					$("#amount").text(asset.amount);
+					$("#crateTime").text(asset.crateTime);
+					$("#desc").text(asset.desc);
+				},
+				error: function (data, status, xhr) {
+					console.log(xhr);
+				}
+			})
+		}
+
+		function getForm() {
+			var formType = $("#formType").val();
+			var url = "http://localhost:8080/formTable/" + formType + ".html";
+
+			if (formType == "NA") {
+				cleanFormTable();
+			} else {
+
+				$.ajax({
+					url: url,
+					success: function (data, status, xhr) {
+						console.log(xhr);
+						$("#formTable").html(data);
+					},
+					error: function (data, status, xhr) {
+						console.log(xhr);
+					}
+				})
+			}
+		}
+
+		function submitFormTable(event) {
+			event.preventDefault();
+			console.log("referrer.endsWith('changeAssetMainPage') : " + referrer.endsWith("changeAssetMainPage"));
+			if (referrer.endsWith("changeAssetMainPage")) {
+				if (fillAllRequiredInput()) {
+					var formType = $("#formType").val();
+					var url = "http://localhost:8086/asset/updateAsset"
+					var assetNo = $("#assetNo").text();
+					var change_employee = $("#change_employee").val();
+					var change_location = $("#change_location").val();
+					var change_assetNoParent = $("#change_assetNoParent").val();
+
+					console.log("assetNo : " + assetNo);
+					console.log("change_employee : " + change_employee);
+					console.log("change_location : " + change_location);
+
+					$.ajax({
+						url: url,
+						type: "POST",
+						data: {
+							assetNo: assetNo,
+							employee: change_employee,
+							location: change_location,
+							assetNoParent: change_assetNoParent
+						},
+						success: function (data, status, xhr) {
+							console.log(xhr);
+							alert(data.message);
+							getAssetDetail(assetNo);
+						},
+						error: function (data, status, xhr) {
+							console.log(xhr);
+						}
+					})
+				}
+			}
+			else {
+				alert("URL was modified! please close the window and try again. thank you!");
+			}
+		}
+
+		function cleanFormTable() {
+			$("#formTable").empty();
+			$("#formTable").append("  ");
+		}
+
+		function fillAllRequiredInput() {
+			var elements = document.querySelectorAll("[isRequired=true]");
+			var isFilled = true;
+			for (i = 0; i < elements.length; i++) {
+				var element = $("#" + elements[i].id);
+				console.log(element.val());
+				if (element.val() == "") {
+					console.log(element.id + " is null");
+					element.attr("style", "background-color: #ff4242;");
+					isFilled = false;
+				}
+			}
+			return isFilled;
+		}
+
+		function closeWindow() {
+			window.close();
+		}
+	</script>
+	<h2>資產異動</h2>
+	異動類別 : <select id="formType" onchange="getForm()">
+		<option value="NA"></option>
+		<option value="giveAsset">發放</option>
+		<option value="changeEmp">保管人異動</option>
+		<option value="changeLocation">地點異動</option>
+	</select> <button onclick="closeWindow()">關閉視窗</button>
+	<table>
+		<tr>
+			<th>
+				<form id="formTable" onsubmit="submitFormTable(event)" onreset="cleanFormTable()"></form>
+			</th>
+		</tr>
+		<tr>
+			<th>
+				<table>
+					<tr>
+						<th>資產編號: </th>
+						<th id="assetNo"></th>
+					</tr>
+					<tr>
+						<th>主資產編號: </th>
+						<th id="assetNoParent"></th>
+					</tr>
+					<tr>
+						<th>狀態: </th>
+						<th id="status"></th>
+					</tr>
+					<tr>
+						<th>資產類別: </th>
+						<th id="type"></th>
+					</tr>
+					<tr>
+						<th>存放地點: </th>
+						<th id="location"></th>
+					</tr>
+					<tr>
+						<th>保管人: </th>
+						<th id="assignee"></th>
+					</tr>
+					<tr>
+						<th>金額: </th>
+						<th id="amount"></th>
+					</tr>
+					<tr>
+						<th>建立時間: </th>
+						<th id="crateTime"></th>
+					</tr>
+					<tr>
+						<th>說明: </th>
+						<th id="desc"></th>
+					</tr>
+				</table>
+			</th>
+		</tr>
+	</table>
+</body>
+
+</html>

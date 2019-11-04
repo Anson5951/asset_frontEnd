@@ -1,0 +1,40 @@
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<head>
+	<title>assetAdvanceSearch</title>
+</head>
+<script>
+	function getEmp() {
+		var empId = $("#empId").val();
+		var empName = $("#empName").val();
+
+		
+	}
+</script>
+
+<body>
+	<h2>進階搜尋</h2>
+	<table>
+		<tr>
+			<th>員工編號包含 : </th>
+			<th><input id="empId" type="text"></th>
+		</tr>
+		<tr>
+			<th>員工姓名包含 : </th>
+			<th><input id="empName" type="text"></th>
+		</tr>
+		<tr>
+			<th><input type="submit" value="搜尋" onclick="getEmp()"></th>
+		</tr>
+	</table>
+	<br><br>
+	<table border="1">
+		<thead>
+			<tr>員工編號</tr>
+			<tr>員工姓名</tr>
+		</thead>
+		<tbody id="resultTableBody"></tbody>
+	</table>
+</body>
+
+</html>

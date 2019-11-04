@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<html>
+
+<head>
+	<meta charset="UTF8">
+	<title>assetChangePage</title>
+</head>
+
+<body>
+	<script>
+		$(document).ready(function () {
+			getAllEmployees();
+		})
+
+		function getAllAssets() {
+			$.ajax({
+				url: "http://localhost:8086/asset/getAllAssetNo",
+				type: "GET",
+				success: function (response, status, xhr) {
+					console.log(xhr);
+					var data = response.result;
+					for (i = 0; i < data.length; i++) {
+						$("#assetList").append("<option value=\"" + data[i] + "\">"
+							+ data[i] + "</option>")
+					}
+				},
+				error: function (response, status, xhr) {
+					console.log(xhr);
+				}
+			})
+		}
+
+		function searchRelateAsset() {
+			console.log($("#assetNo").val());
+
+			var value = $("#assetNo").val();
+			if (value.length == 5) {
+				$("#assetList").empty();
+				getAssetByConditions(value);
+				console.log($("#assetList").html());
+			}
+			else if (value.length < 5) {
+				$("#assetList").empty();
+				console.log("clean assetList");
+				console.log("assetList : " + $("#assetList").html());
+			}
+		}
+
+		function getAssetByConditions(value) {
+			console.log("getting asset by : " + value);
+			$.ajax({
+				url: "http://localhost:8086/asset/getAssetByConditions",
+				data: {
+					assetNo: value
+				},
+				success: function (data) {
+					console.log("get " + data.result.length + " asset(s)");
+					var resultList = data.result;
+					if (resultList.length > 0) {
+						for (i = 0; i < resultList.length; i++) {
+							$("#assetList").append("<option >" + resultList[i].assetNo + "</option>");
+						}
+					}
+					else {
+						alert("無相關資產")
+					}
+				},
+				error: function (data, status, xhr) {
+					console.log(xhr);
+					alert("Error");
+				}
+			})
+		}
+
+		function getAllEmployees() {
+			$.ajax({
+				url: "http://localhost:8086/emp/getAllEmpData",
+				type: "GET",
+				success: function (response, status, xhr) {
+					console.log(xhr);
+					var data = response.result;
+					for (i = 0; i < data.length; i++) {
+						$("#employeeList").append("<option value=\"" + data[i].empId + "\">"
+							+ data[i].empName + "</option>")
+					}
+				},
+				error: function (response, status, xhr) {
+					console.log(xhr);
+				}
+			})
+		}
+
+		function submit() {
+			$.ajax({
+				url: 'http://localhost:8086/asset/getAssetByConditions',
+				type: "GET",
+				dataType: "json",
+				contentType: "application/json;charset=UTF-8",
+				data: {
+					assetNo: $("#assetNo").val(),
+					employee: $("#employee").val()
+				},
+				success: function (data) {
+					console.log("success");
+					console.log(data.result);
+					$("#resultTableBody").empty();
+					if (data.result.length > 0) {
+						$("#resultTable").removeAttr("hidden");
+						for (i = 0; i < data.result.length; i++) {
+							var asset = data.result[i];
+							console.log("asset[" + i + "]");
+							console.log(asset);
+							$("#resultTableBody").append($(
+								"<tr>" +
+								"<th><button id=\"changeButton\"" +
+								"onclick=\"getAssetChangeDetailPage(" + asset.assetNo + ")\">異動</button> " +
+								asset.assetNo + "</th>" +
+								"<th>" + asset.status + "</th>" +
+								"<th>" + asset.assetType + "</th>" +
+								"<th>" + asset.location + "</th>" +
+								"<th>" + ((asset.assetNoParent == null) ? "" : asset.assetNoParent) + "</th>" +
+								"<th>" + asset.assignee + "</th>" +
+								"<th>" + asset.amount + "</th>" +
+								"<th>" + asset.desc + "</th>" +
+								"<th>" + asset.crateTime + "</th>" +
+								"</tr>"));
+						}
+					}
+					else {
+						alert("無資料");
+					}
+				},
+				error: function (data, status, xhr) {
+					console.log(status);
+					console.log(xhr);
+				}
+			});
+		}
+
+		function clearInputValues() {
+			$("#assetNo").val("");
+			$("#employee").val("");
+		}
+
+		function getAssetChangeDetailPage(assetNo) {
+			$.ajax({
+				url: 'http://localhost:8086/asset/getAssetByConditions',
+				type: "GET",
+				dataType: "json",
+				contentType: "application/json;charset=UTF-8",
+				data: {
+					assetNo: assetNo
+				},
+				success: function (response) {
+					var data = response.result[0];
+					console.log(data);
+					var url = "/changeAssetDetailPage?";
+					url += "assetNo=" + data.assetNo;
+					url += "&assetNoParent=" + ((data.assetNoParent == null) ? "" : data.assetNoParent);
+					url += "&status=" + data.status;
+					url += "&type=" + data.assetType;
+					url += "&location=" + data.location;
+					url += "&assignee=" + data.assignee;
+					url += "&amount=" + data.amount;
+					url += "&crateTime=" + data.crateTime;
+					url += "&desc=" + data.desc;
+					window.open(url);
+				},
+				error: function (data, status, xhr) {
+					console.log(xhr);
+				}
+			})
+		}
+	</script>
+	<table>
+		<caption>資產異動</caption>
+		<tr>
+			<th>資產編號</th>
+			<th><input id="assetNo" type="search" list="assetList" onkeyup="searchRelateAsset()"></th>
+		</tr>
+		<tr>
+			<th>保管人</th>
+			<th><input id="employee" type="search" list="employeeList"></th>
+		</tr>
+	</table>
+	<br><br>
+	<button onclick="submit()">查詢</button>
+	<button onclick="clearInputValues()">清空</button>
+	<br><br>
+	<table id="resultTable" border="1" hidden>
+		<thead>
+			<tr>
+				<th>資產編號</th>
+				<th>狀態</th>
+				<th>資產類別</th>
+				<th>存放地點</th>
+				<th>主資產編號</th>
+				<th>保管人</th>
+				<th>金額</th>
+				<th>說明</th>
+				<th>建立時間</th>
+			</tr>
+		</thead>
+		<tbody id="resultTableBody">
+		</tbody>
+	</table>
+	<datalist id="employeeList"></datalist>
+	<datalist id="assetList"></datalist>
+</body>
+
+</html>

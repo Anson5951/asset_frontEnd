@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<html>
+
+<head>
+	<meta charset="UTF8">
+	<title>assetScrapPage</title>
+</head>
+
+<body>
+	<script>
+		$(document).ready(function () {
+		})
+
+		function getAssetsWithConditions() {
+			$.ajax({
+				url: 'http://localhost:8086/asset/getAssetByConditions',
+				type: "GET",
+				dataType: "json",
+				contentType: "application/json;charset=UTF-8",
+				data: {
+					assetNo: $("#assetNo").val(),
+					employee: $("#employee").val()
+				},
+				success: function (data) {
+					console.log("success");
+					console.log(data.result);
+
+					$("#resultTableBody").empty();
+
+					if (data.result.length > 0) {
+						$("#resultTable").removeAttr("hidden");
+						for (i = 0; i < data.result.length; i++) {
+							var asset = data.result[i];
+							$("#resultTableBody").append($(
+								"<tr>" +
+								"<th><button id=\"scrapButton\" onclick=\"scrapAsset(" + i + ")\">報廢</button></th>" +
+								"<th id=\"assetNo" + i + "\">" + asset.assetNo + "</th>" +
+								"<th id=\"status" + i + "\">" + asset.status + "</th>" +
+								"<th id=\"assetType" + i + "\">" + asset.assetType + "</th>" +
+								"<th id=\"location" + i + "\">" + asset.location + "</th>" +
+								"<th id=\"assetNoParent" + i + "\">" + ((asset.assetNoParent == null) ? "" : asset.assetNoParent) + "</th>" +
+								"<th id=\"assignee" + i + "\">" + asset.assignee + "</th>" +
+								"<th id=\"amount" + i + "\">" + asset.amount + "</th>" +
+								"<th id=\"desc" + i + "\">" + asset.desc + "</th>" +
+								"<th id=\"crateTime" + i + "\">" + asset.crateTime + "</th>" +
+								"</tr>"));
+						}
+					}
+					else {
+						alert("無資料");
+					}
+				},
+				error: function (data, status, xhr) {
+					console.log(status);
+					console.log(xhr);
+				}
+			});
+		}
+
+		function scrapAsset(assetIndex) {
+			var assetNo = $("#assetNo" + assetIndex).text();
+			var warningText = "是否報廢資產編號為  " + assetNo + "  之資產?";
+			if (confirm(warningText)) {
+				$.ajax({
+					url: "http://localhost:8086/asset/deleteAsset",
+					type: "POST",
+					data: {
+						assetNo: assetNo,
+						status: $("#status" + assetIndex).text(),
+						assetType: $("#assetType" + assetIndex).text(),
+						location: $("#location" + assetIndex).text(),
+						assignee: $("#assignee" + assetIndex).text(),
+						amount: $("#amount" + assetIndex).text(),
+						desc: $("#desc" + assetIndex).text(),
+						crateTime: $("#crateTime" + assetIndex).text()
+					},
+					success: function (data, status, xhr) {
+						console.log(xhr);
+						alert("已報廢 " + data.result + "筆資產");
+						getAssetsWithConditions();
+					},
+					error: function (data, status, xhr) {
+						console.log(xhr);
+						alert("系統錯誤");
+					}
+				})
+			}
+		}
+
+		function clearInputValues() {
+			$("#assetNo").val("");
+			$("#employee").val("");
+		}
+	</script>
+	<table>
+		<caption>資產報廢</caption>
+		<tr>
+			<th>資產編號</th>
+			<th><input id="assetNo" type="text"></th>
+		</tr>
+		<tr>
+			<th>保管人</th>
+			<th><input id="employee" type="text"></th>
+		</tr>
+	</table>
+	<br><br>
+	<button onclick="getAssetsWithConditions()">查詢</button>
+	<button onclick="clearInputValues()">清空</button>
+	<br><br>
+	<table id="resultTable" border="1" hidden>
+		<thead>
+			<tr>
+				<th>功能</th>
+				<th>資產編號</th>
+				<th>狀態</th>
+				<th>資產類別</th>
+				<th>存放地點</th>
+				<th>主資產編號</th>
+				<th>保管人</th>
+				<th>金額</th>
+				<th>說明</th>
+				<th>建立時間</th>
+			</tr>
+		</thead>
+		<tbody id="resultTableBody">
+		</tbody>
+	</table>
+
+</body>
+
+</html>
